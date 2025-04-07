@@ -185,7 +185,7 @@ export default tseslint.config(
 
 ## 문의하기
 
-- 이슈 트래커: [GitHub Issues]([https://github.com/brparkk/mailfiz/issues](https://github.com/InnerCircle-ICD3/fe-library/issues/15))
+- 이슈 트래커: [GitHub Issues](https://github.com/InnerCircle-ICD3/fe-library/issues/15)
 - 이메일: <borapark13@gmail.com>
 
 ## Chrome Web Store
