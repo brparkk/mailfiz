@@ -1,4 +1,5 @@
 # MailFiz
+디자인 : https://www.figma.com/design/Yq0ZksnVtfNnuUPfDEyk0j/MailFiz-Assets?node-id=0-1&t=0SZK8PWPt7Ev8t5c-1
 
 <image src="https://github.com/user-attachments/assets/f4d918f5-144c-4665-a9a2-c9c75c9ea2ff" width=340 />
 
