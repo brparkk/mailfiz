@@ -1,8 +1,11 @@
 # MailFiz
-디자인 : https://www.figma.com/design/Yq0ZksnVtfNnuUPfDEyk0j/MailFiz-Assets?node-id=0-1&t=0SZK8PWPt7Ev8t5c-1
 
-<image src="https://github.com/user-attachments/assets/f4d918f5-144c-4665-a9a2-c9c75c9ea2ff" width=340 />
+<img src="https://github.com/user-attachments/assets/e1785c89-4c73-4731-95d9-4dcb32258728" width="340" />
 
+<p style="color:#dcdcdc;">
+  <a style="font-size:12px;" href="https://www.figma.com/design/Yq0ZksnVtfNnuUPfDEyk0j/MailFiz-Assets?node-id=0-1&t=0SZK8PWPt7Ev8t5c-1" target="_blank">디자인 시안 보기 (Figma)</a>
+</p>
+     
 ## 프로젝트 개요
 
 #### 개요
