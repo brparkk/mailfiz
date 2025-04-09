@@ -27,7 +27,9 @@ function MailForm() {
         className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary"
       />
       <fieldset>
-        <label htmlFor="mailfiz-select-tone">Select tone</label>
+        <legend className="block text-sm font-medium text-text-primary">
+          Select tone
+        </legend>
         <div className="flex gap-2 mt-3">
           <button type="button" className="default active">
             Default
@@ -41,7 +43,9 @@ function MailForm() {
         </div>
       </fieldset>
       <fieldset>
-        <label htmlFor="mailfiz-select-language">Select language</label>
+        <legend className="block text-sm font-medium text-text-primary">
+          Select language
+        </legend>
         <div className="relative">
           <button
             type="button"
