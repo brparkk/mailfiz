@@ -1,15 +1,110 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-primary: #3366FF;
-    --color-background: #FAFAFA;
-    --color-text-primary: #333333;
-    --color-text-secondary: #FFFFFF;
-    --color-text-tertiary: #808080;
-    --color-button-primary: #3366FF;
-    --color-button-secondary: #F2F7FF;
-    --color-button-tertiary: #FAFAFF;
-    --color-border: #CCCCCC;
-    --color-input-placeholder: #999999;
-    --color-warning: #FF0000;
+  --color-primary: #3366ff;
+  --color-background: #fafafa;
+  --color-text-primary: #333333;
+  --color-text-secondary: #808080;
+  --color-button-primary: #3366ff;
+  --color-button-secondary: #f2f7ff;
+  --color-button-tertiary: #fafaff;
+  --color-border: #cccccc;
+  --color-input-placeholder: #999999;
+  --color-warning: #ff0000;
+}
+
+body {
+  max-width: 360px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+form > fieldset > label {
+  display: block;
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--color-text-primary);
+}
+
+textarea::-webkit-resizer {
+  display: none;
+}
+
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
+button.default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 8px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--color-primary);
+  background-color: white;
+  color: var(--color-primary);
+
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+button.default:hover {
+  opacity: 0.8;
+}
+
+button.active,
+button.default:active {
+  background-color: var(--color-button-primary);
+  color: white;
+}
+
+button.default:disabled {
+  background-color: #f2f2f2;
+  color: var(--color-input-placeholder);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: white;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+select:hover {
+  border-color: var(--color-primary);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(51, 102, 255, 0.1);
+}
+
+select > option {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background-color: white;
+}
+
+select > option:hover {
+  background-color: var(--color-button-tertiary);
+}
+
+select > option:checked {
+  background-color: var(--color-button-tertiary);
+  color: var(--color-primary);
 }
