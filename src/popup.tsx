@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './popup.css';
