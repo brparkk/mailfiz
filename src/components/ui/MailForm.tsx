@@ -1,15 +1,12 @@
 import { useState } from 'react';
+import Button from './Button';
+import SelectButton from './SelectButton';
+import { languages } from '../../lib/constant';
+import ArrowIcon from '../icons/ArrowIcon';
 
 function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-
-  const languages = [
-    { value: 'en', label: 'English' },
-    { value: 'ko', label: 'Korean' },
-    { value: 'zh', label: 'Chinese' },
-    { value: 'ja', label: 'Japanese' },
-  ];
+  const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
 
   return (
     <form id="mailfiz-form" className="flex flex-col gap-5 py-6 px-5">
@@ -31,15 +28,9 @@ function MailForm() {
           Select tone
         </legend>
         <div className="flex gap-2 mt-3">
-          <button type="button" className="default active">
-            Default
-          </button>
-          <button type="button" className="default">
-            Professional
-          </button>
-          <button type="button" className="default">
-            Casual
-          </button>
+          <Button className="active">Default</Button>
+          <Button>Professional</Button>
+          <Button>Casual</Button>
         </div>
       </fieldset>
       <fieldset>
@@ -53,49 +44,33 @@ function MailForm() {
             className="flex justify-between items-center w-full mt-3 border border-border rounded-[8px] py-2 px-3 text-sm text-text-primary"
           >
             <span>{selectedLanguage}</span>
-            <svg
-              className={`w-4 h-4 transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <ArrowIcon isOpen={isLanguageOpen} />
           </button>
           {isLanguageOpen && (
             <div className="absolute w-full mt-1 bg-white border border-border rounded-[8px] shadow-lg z-10">
               {languages.map((lang) => (
-                <button
+                <SelectButton
                   key={lang.value}
-                  type="button"
                   onClick={() => {
                     setSelectedLanguage(lang.label);
                     setIsLanguageOpen(false);
                   }}
-                  className={`w-full p-2 text-left text-sm hover:bg-button-secondary ${
-                    selectedLanguage === lang.label
-                      ? 'text-primary bg-button-tertiary'
-                      : 'text-text-primary'
-                  }`}
+                  isSelected={selectedLanguage === lang.label}
                 >
                   {lang.label}
-                </button>
+                </SelectButton>
               ))}
             </div>
           )}
         </div>
       </fieldset>
-      <button
+      <Button
         type="submit"
-        className="w-full h-12 rounded-[8px] bg-primary text-white mt-12 font-medium cursor-pointer"
+        variant="primary"
+        className="w-full h-12 rounded-[8px] mt-12 font-medium"
       >
         Generate
-      </button>
+      </Button>
     </form>
   );
 }
