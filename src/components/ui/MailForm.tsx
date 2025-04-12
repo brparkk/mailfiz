@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Button from './Button';
 import SelectButton from './SelectButton';
-import { languages } from '../lib/constant';
+import { languages } from '../../lib/constant';
+import ArrowIcon from '../icons/ArrowIcon';
 
 function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
@@ -43,19 +44,7 @@ function MailForm() {
             className="flex justify-between items-center w-full mt-3 border border-border rounded-[8px] py-2 px-3 text-sm text-text-primary"
           >
             <span>{selectedLanguage}</span>
-            <svg
-              className={`w-4 h-4 transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <ArrowIcon isOpen={isLanguageOpen} />
           </button>
           {isLanguageOpen && (
             <div className="absolute w-full mt-1 bg-white border border-border rounded-[8px] shadow-lg z-10">
