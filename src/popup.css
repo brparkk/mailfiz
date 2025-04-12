@@ -27,15 +27,9 @@ textarea::-webkit-scrollbar {
   display: none;
 }
 
-button.active,
-button.default:active {
+button.active {
   background-color: var(--color-button-primary);
   color: white;
-}
-
-button.default:disabled {
-  background-color: #f2f2f2;
-  color: var(--color-input-placeholder);
 }
 
 select {
