@@ -28,7 +28,7 @@ function MailForm() {
           Select tone
         </legend>
         <div className="flex gap-2 mt-3">
-          <Button>Default</Button>
+          <Button className="active">Default</Button>
           <Button>Professional</Button>
           <Button>Casual</Button>
         </div>

@@ -30,6 +30,7 @@ textarea::-webkit-scrollbar {
 button.active {
   background-color: var(--color-button-primary);
   color: white;
+  border: none;
 }
 
 select {
