@@ -1,15 +1,11 @@
 import { useState } from 'react';
+import Button from './Button';
+import SelectButton from './SelectButton';
+import { languages } from '../lib/constant';
 
 function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-
-  const languages = [
-    { value: 'en', label: 'English' },
-    { value: 'ko', label: 'Korean' },
-    { value: 'zh', label: 'Chinese' },
-    { value: 'ja', label: 'Japanese' },
-  ];
+  const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
 
   return (
     <form id="mailfiz-form" className="flex flex-col gap-5 py-6 px-5">
@@ -31,15 +27,9 @@ function MailForm() {
           Select tone
         </legend>
         <div className="flex gap-2 mt-3">
-          <button type="button" className="default active">
-            Default
-          </button>
-          <button type="button" className="default">
-            Professional
-          </button>
-          <button type="button" className="default">
-            Casual
-          </button>
+          <Button>Default</Button>
+          <Button>Professional</Button>
+          <Button>Casual</Button>
         </div>
       </fieldset>
       <fieldset>
@@ -70,32 +60,28 @@ function MailForm() {
           {isLanguageOpen && (
             <div className="absolute w-full mt-1 bg-white border border-border rounded-[8px] shadow-lg z-10">
               {languages.map((lang) => (
-                <button
+                <SelectButton
                   key={lang.value}
-                  type="button"
                   onClick={() => {
                     setSelectedLanguage(lang.label);
                     setIsLanguageOpen(false);
                   }}
-                  className={`w-full p-2 text-left text-sm hover:bg-button-secondary ${
-                    selectedLanguage === lang.label
-                      ? 'text-primary bg-button-tertiary'
-                      : 'text-text-primary'
-                  }`}
+                  isSelected={selectedLanguage === lang.label}
                 >
                   {lang.label}
-                </button>
+                </SelectButton>
               ))}
             </div>
           )}
         </div>
       </fieldset>
-      <button
+      <Button
         type="submit"
-        className="w-full h-12 rounded-[8px] bg-primary text-white mt-12 font-medium cursor-pointer"
+        variant="primary"
+        className="w-full h-12 rounded-[8px] mt-12 font-medium"
       >
         Generate
-      </button>
+      </Button>
     </form>
   );
 }
