@@ -1,3 +1,5 @@
+import { cn } from '../utils';
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   className?: string;
@@ -5,7 +7,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 function Button({ children, className, ...props }: ButtonProps) {
   return (
-    <button className={className} {...props}>
+    <button className={cn(className)} {...props}>
       {children}
     </button>
   );
