@@ -1,4 +1,4 @@
-import { cn } from '../lib/utils';
+import { cn } from '../../lib/utils';
 import BaseButton from './BaseButton';
 
 interface SelectButtonProps
