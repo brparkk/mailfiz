@@ -1,17 +1,20 @@
-import ky from 'ky';
+import OpenAI from 'openai';
 
-const baseApi = ky.create({
-  prefixUrl: 'https://api.deepseek.com',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
-  },
+// Debug: Log all environment variables
+console.log('Environment variables:', import.meta.env);
+
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+console.log('API Key:', apiKey ? 'Present' : 'Missing'); // Debug log
+
+if (!apiKey) {
+  throw new Error('OpenAI API key is required. Please check your .env file.');
+}
+
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey,
+  dangerouslyAllowBrowser: true,
 });
-
-export const api = {
-  get: (url: string) => baseApi.get(url).json(),
-  post: (url: string, body: any) => baseApi.post(url, { json: body }).json(),
-};
 
 const toneMap = {
   default: 'Neutral and polite. Suitable for general purposes.',
@@ -20,7 +23,7 @@ const toneMap = {
     'Formal and respectful. Use clear, business-like language and avoid contractions (e.g. do not).',
 };
 
-const systemPrompt = `You are an expert email writer who can compose professional, polite, or casual emails depending on the user’s need.  
+const systemPrompt = `You are an expert email writer who can compose professional, polite, or casual emails depending on the user's need.  
 Based on the message content, preferred tone, and selected language, generate a suitable email response.`;
 
 const userPrompt = (
@@ -56,8 +59,7 @@ export const generateText = async (
   language: string,
   tone: keyof typeof toneMap
 ) => {
-  const response = (await api.post('/v1/chat/completions', {
-    model: 'deepseek-chat',
+  const completion = await openai.chat.completions.create({
     messages: [
       {
         role: 'system',
@@ -68,11 +70,12 @@ export const generateText = async (
         content: userPrompt(messages, language, tone),
       },
     ],
-    temperature: 0.7,
+    model: 'deepseek-chat',
+    temperature: 1.5,
     max_tokens: 1000,
-  })) as {
-    choices: [{ message: { content: string } }];
-  };
+  });
 
-  return response.choices[0].message.content;
+  console.log(completion.choices[0].message.content);
+
+  return completion.choices[0].message.content;
 };
