@@ -97,7 +97,7 @@ const validateAndSanitizeInput = async (input: string, language: string) => {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/<[^>]+>/g, '') // Remove all HTML tags
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+="[^"]*"/g, '') // Remove event handlers
+    .replace(/on\w+=(["'][^"']*["'])/g, '') // Remove event handlers
     .trim();
 
   // Check if the input is too short or too long
