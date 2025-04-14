@@ -3,13 +3,34 @@ import Button from './Button';
 import SelectButton from './SelectButton';
 import { languages } from '../../lib/constant';
 import ArrowIcon from '../icons/ArrowIcon';
+import { cn } from '../../lib/utils';
+import { generateText } from '../../lib/api';
+
+type MailTone = 'default' | 'professional' | 'casual';
 
 function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<MailTone>('default');
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const messages = formData.get('mailfiz-textarea') as string;
+    const generatedMail = await generateText(
+      messages,
+      selectedLanguage,
+      selectedTone
+    );
+    return generatedMail;
+  };
+
   return (
-    <form id="mailfiz-form" className="flex flex-col gap-5 py-6 px-5">
+    <form
+      id="mailfiz-form"
+      className="flex flex-col gap-5 py-6 px-5"
+      onSubmit={handleSubmit}
+    >
       <fieldset className="flex flex-col gap-2">
         <legend className="text-2xl font-bold text-text-primary">
           Mailfiz
@@ -28,9 +49,15 @@ function MailForm() {
           Select tone
         </legend>
         <div className="flex gap-2 mt-3">
-          <Button className="active">Default</Button>
-          <Button>Professional</Button>
-          <Button>Casual</Button>
+          {['default', 'professional', 'casual'].map((tone) => (
+            <Button
+              key={tone}
+              className={cn(selectedTone === tone && 'active')}
+              onClick={() => setSelectedTone(tone as MailTone)}
+            >
+              {tone}
+            </Button>
+          ))}
         </div>
       </fieldset>
       <fieldset>
