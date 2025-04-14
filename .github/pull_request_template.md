@@ -1,43 +1,32 @@
-## ✨ **Overview**
-- What is the purpose of this pull request? Provide a concise summary of the changes made and the reason for them.
 
-## 🔗 **Related Issues**
-- Link any related issues (e.g., `Fixes #123`, `Closes #45`) or dependencies.
+### **✨ 변경 사항 요약**
+- 이 PR의 목적과 주요 변경 사항을 간단히 정리해주세요.
 
-## 🛠️ **Changes Made**
-- Detail the key changes or additions made in this PR.
-- Use bullet points for better clarity:
-  - 📌 **Change 1**: ...
-  - 📌 **Change 2**: ...
-  - 📌 **Change 3**: ...
+### **🔗 관련 이슈**
+- 해결/연관된 이슈 링크: `Fixes #123`, `Closes #45` (필요시 작성)
 
-## 📝 **Type of Changes**
-- Mark `x` in the relevant box:
-  - [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
-  - [ ] ✨ New feature (non-breaking change that adds functionality)
-  - [ ] ⚠️ Breaking change (changes that may break existing functionality)
-  - [ ] 🧹 Refactoring (non-functional updates for readability and maintainability)
-  - [ ] 📖 Documentation update
+### **🛠️ 주요 변경 사항**
+- 📍 **변경 1**
 
-## ✅ **Checklist**
-- [ ] 🔍 I have run my code locally and verified it works as intended.
-- [ ] 🧪 I have written new tests to cover my changes.
-- [ ] ✔️ All existing and new tests pass.
-- [ ] 🛠️ I have reviewed and followed the project's code style guidelines.
-- [ ] 📚 Documentation has been updated (if required).
+### **📝 변경 유형**
+- 아래 해당 사항에 표시(✔)하세요:
+  - [ ] 🐛 버그 수정
+  - [ ] ✨ 신규 기능 추가
+  - [ ] ⚠️ 호환성 깨질 가능성 있는 변경
+  - [ ] 🧹 코드 리팩토링
+  - [ ] 📖 문서 업데이트
 
-## 🚀 **Testing Instructions**
-- Steps to test this PR:
-  1. 🏁 **Step 1**: ...
-  2. 🧪 **Step 2**: ...
-  3. ✅ **Step 3**: ...
+### **✅ 체크리스트**
+- [ ] 변경된 코드가 정상 작동함을 확인했습니다.
+- [ ] 새로운 테스트를 작성했고, 모든 테스트가 통과했습니다.
+- [ ] 프로젝트 코드 스타일을 준수했습니다.
+- [ ] 관련 문서를 업데이트했습니다. (필요 시)
 
-## 📸 **Screenshots (if applicable)**
-- Add screenshots, GIFs, or videos to demonstrate visual changes before/after:
-  - **Before:**
-    - ![Before Image]()
-  - **After:**
-    - ![After Image]()
 
-## 💡 **Additional Notes**
-- Add any relevant details, challenges faced, or areas requiring special attention from the reviewer.
+### **🚀 테스트 방법**
+1.
+2.
+3.
+
+### **💡 추가 사항**
+- 참고 또는 리뷰 시 유의할 점이 있다면 작성해주세요.
