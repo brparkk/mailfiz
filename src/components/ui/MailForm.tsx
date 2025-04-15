@@ -19,12 +19,14 @@ function MailForm() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const messages = formData.get('mailfiz-textarea') as string;
+    const apiKey = formData.get('mailfiz-api-key') as string;
     try {
       setIsLoading(true);
       const generatedMail = await generateText(
         messages,
         selectedLanguage,
-        selectedTone
+        selectedTone,
+        apiKey
       );
       setIsLoading(false);
       return generatedMail;
@@ -48,6 +50,19 @@ function MailForm() {
         <span className="text-sm text-text-secondary">
           AI-powered email drafting
         </span>
+      </fieldset>
+      <fieldset>
+        <legend className="block text-sm font-medium text-text-primary">
+          API Key
+        </legend>
+        <div className="flex gap-2 mt-3">
+          <input
+            type="text"
+            name="mailfiz-api-key"
+            placeholder="Enter your API key"
+            className="w-full h-12 rounded-[8px] mt-12 font-medium"
+          />
+        </div>
       </fieldset>
       <textarea
         name="mailfiz-textarea"

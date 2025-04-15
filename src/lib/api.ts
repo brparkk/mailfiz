@@ -6,12 +6,6 @@ if (!apiKey) {
   throw new Error('OpenAI API key is required. Please check your .env file.');
 }
 
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey,
-  dangerouslyAllowBrowser: true,
-});
-
 const toneMap = {
   default: 'Neutral and polite. Suitable for general purposes.',
   casual: 'Friendly and relaxed. Use simple words and a conversational tone',
@@ -50,37 +44,28 @@ Format your output like this:
 ---
 `;
 
-// Add input validation function
-const validateAndSanitizeInput = async (input: string, language: string) => {
-  // Remove or escape potentially harmful characters
-  const sanitized = input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-    .replace(/<[^>]+>/g, '') // Remove all HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=(["'][^"']*["'])/g, '') // Remove event handlers
-    .trim();
-
-  // Check if the input is too short or too long
-  if (sanitized.length < 2) {
-    throw new Error('Message is too short. Please provide more details.');
-  }
-  if (sanitized.length > 5000) {
-    throw new Error(
-      'Message is too long. Please keep it under 5000 characters.'
-    );
-  }
-
-  return sanitized;
-};
-
 export const generateText = async (
   messages: string,
   language: string,
-  tone: keyof typeof toneMap
+  tone: keyof typeof toneMap,
+  apiKey: string
 ) => {
   try {
-    // Validate and sanitize input
-    const sanitizedMessage = await validateAndSanitizeInput(messages, language);
+    if (messages.length < 2) {
+      throw new Error('Message is too short. Please provide more details.');
+    }
+
+    if (messages.length > 5000) {
+      throw new Error(
+        'Message is too long. Please keep it under 5000 characters.'
+      );
+    }
+
+    const openai = new OpenAI({
+      baseURL: 'https://api.deepseek.com',
+      apiKey,
+      dangerouslyAllowBrowser: true,
+    });
 
     const completion = await openai.chat.completions.create({
       messages: [
@@ -90,7 +75,7 @@ export const generateText = async (
         },
         {
           role: 'user',
-          content: userPrompt(sanitizedMessage, language, tone),
+          content: userPrompt(messages, language, tone),
         },
       ],
       model: 'deepseek-chat',
