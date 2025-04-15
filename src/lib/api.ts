@@ -1,11 +1,5 @@
 import OpenAI from 'openai';
 
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
-if (!apiKey) {
-  throw new Error('OpenAI API key is required. Please check your .env file.');
-}
-
 const toneMap = {
   default: 'Neutral and polite. Suitable for general purposes.',
   casual: 'Friendly and relaxed. Use simple words and a conversational tone',
