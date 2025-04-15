@@ -3,7 +3,7 @@ import Button from './Button';
 import SelectButton from './SelectButton';
 import { languages } from '../../lib/constant';
 import ArrowIcon from '../icons/ArrowIcon';
-import { cn } from '../../lib/utils';
+import { cn, containsProfanity } from '../../lib/utils';
 import { generateText } from '../../lib/api';
 
 type MailTone = 'default' | 'professional' | 'casual';
@@ -12,17 +12,35 @@ function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [selectedTone, setSelectedTone] = useState<MailTone>('default');
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const messages = formData.get('mailfiz-textarea') as string;
-    const generatedMail = await generateText(
-      messages,
-      selectedLanguage,
-      selectedTone
-    );
-    return generatedMail;
+
+    const hasProfanity = await containsProfanity(messages);
+
+    if (hasProfanity) {
+      setError('Profanity is not allowed');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const generatedMail = await generateText(
+        messages,
+        selectedLanguage,
+        selectedTone
+      );
+      setIsLoading(false);
+      return generatedMail;
+    } catch (error) {
+      setIsLoading(false);
+      setError('An error occurred while generating the email');
+      return null;
+    }
   };
 
   return (
@@ -91,12 +109,14 @@ function MailForm() {
           )}
         </div>
       </fieldset>
+      {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
       <Button
         type="submit"
         variant="primary"
         className="w-full h-12 rounded-[8px] mt-12 font-medium"
+        disabled={isLoading}
       >
-        Generate
+        {isLoading ? 'Generating...' : 'Generate'}
       </Button>
     </form>
   );
