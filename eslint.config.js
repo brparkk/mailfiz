@@ -21,18 +21,13 @@ export default tseslint.config(
         },
       },
       globals: {
-        // Browser environment globals
-        window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
-        // ES2021 globals
-        Promise: 'readonly',
-        Map: 'readonly',
-        Set: 'readonly',
-        // React globals
-        React: 'readonly',
-        JSX: 'readonly',
+        window: 'readonly',
       },
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
@@ -56,6 +51,7 @@ export default tseslint.config(
       'react/prop-types': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-undef': 'off',
     },
   }
 );
