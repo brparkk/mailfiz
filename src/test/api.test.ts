@@ -11,14 +11,14 @@ describe('API Tests', () => {
       );
     });
 
-    test('should throw error when message is too long', async () => {
+    test('should throw error when message is too long (over 5000 characters)', async () => {
       const longMessage = 'a'.repeat(5001);
       await expect(
         generateText(longMessage, 'en', 'default', apiKey)
       ).rejects.toThrow('Message is too long');
     });
 
-    test('should throw error when message is too short', async () => {
+    test('should throw error when message is too short (under 2 characters)', async () => {
       const shortMessage = 'a';
       await expect(
         generateText(shortMessage, 'en', 'default', apiKey)
