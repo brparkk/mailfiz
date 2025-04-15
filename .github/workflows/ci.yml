@@ -68,5 +68,5 @@ jobs:
         with:
           name: extension-package
           path: |
-            dist/
-            extension.zip 
+            src/dist/
+            src/extension.zip 
