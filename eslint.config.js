@@ -10,10 +10,6 @@ export default tseslint.config(
     ignores: ['**/dist/**', '**/node_modules/**'],
   },
   {
-    env: {
-      browser: true,
-      es2021: true,
-    },
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       parser: tseslint.parser,
@@ -25,6 +21,15 @@ export default tseslint.config(
         },
       },
       globals: {
+        // Browser environment globals
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        // ES2021 globals
+        Promise: 'readonly',
+        Map: 'readonly',
+        Set: 'readonly',
+        // React globals
         React: 'readonly',
         JSX: 'readonly',
       },
