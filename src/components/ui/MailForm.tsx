@@ -55,14 +55,12 @@ function MailForm() {
         <legend className="block text-sm font-medium text-text-primary">
           API Key
         </legend>
-        <div className="flex gap-2 mt-3">
-          <input
-            type="text"
-            name="mailfiz-api-key"
-            placeholder="Enter your API key"
-            className="w-full h-12 rounded-[8px] mt-12 font-medium"
-          />
-        </div>
+        <input
+          type="text"
+          name="mailfiz-api-key"
+          placeholder="Enter your API key"
+          className="w-full h-9.5 mt-2 rounded-[8px] px-4 py-2 font-light text-xs border border-border placeholder:text-input-placeholder placeholder:text-xs"
+        />
       </fieldset>
       <textarea
         name="mailfiz-textarea"
