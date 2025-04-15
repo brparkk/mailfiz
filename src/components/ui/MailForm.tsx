@@ -1,10 +1,10 @@
 import { useState } from 'react';
+import { generateText } from '../../lib/api';
+import { languages } from '../../lib/constant';
+import { cn } from '../../lib/utils';
+import ArrowIcon from '../icons/ArrowIcon';
 import Button from './Button';
 import SelectButton from './SelectButton';
-import { languages } from '../../lib/constant';
-import ArrowIcon from '../icons/ArrowIcon';
-import { cn, containsProfanity } from '../../lib/utils';
-import { generateText } from '../../lib/api';
 
 type MailTone = 'default' | 'professional' | 'casual';
 
@@ -19,14 +19,6 @@ function MailForm() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const messages = formData.get('mailfiz-textarea') as string;
-
-    const hasProfanity = await containsProfanity(messages);
-
-    if (hasProfanity) {
-      setError('Profanity is not allowed');
-      return;
-    }
-
     try {
       setIsLoading(true);
       const generatedMail = await generateText(
