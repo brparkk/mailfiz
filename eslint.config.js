@@ -10,10 +10,6 @@ export default tseslint.config(
     ignores: ['**/dist/**', '**/node_modules/**'],
   },
   {
-    env: {
-      browser: true,
-      es2021: true,
-    },
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       parser: tseslint.parser,
@@ -25,9 +21,13 @@ export default tseslint.config(
         },
       },
       globals: {
-        React: 'readonly',
-        JSX: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        window: 'readonly',
       },
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
@@ -51,6 +51,7 @@ export default tseslint.config(
       'react/prop-types': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-undef': 'off',
     },
   }
 );
