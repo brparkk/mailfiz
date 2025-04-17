@@ -31,6 +31,7 @@ function MailForm() {
       setIsLoading(false);
       return generatedMail;
     } catch (error) {
+      console.error(error);
       setIsLoading(false);
       setError('An error occurred while generating the email');
       return null;
