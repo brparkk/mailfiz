@@ -4,20 +4,20 @@
   "version": "0.0.1",
   "description": "MailFiz is a Chrome extension that helps you manage your email.",
   "icons": {
-    "16": "assets/icon-24.png",
-    "32": "assets/icon-48.png",
-    "128": "assets/icon-96.png"
+    "16": "src/assets/icon-24.png",
+    "32": "src/assets/icon-48.png",
+    "128": "src/assets/icon-96.png"
   },
   "action": {
     "default_popup": "src/popup.html",
-    "default_icon": "assets/icon-48.png"
+    "default_icon": "src/assets/icon-48.png"
   },
   "permissions": ["storage", "tabs", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["src/content.ts"]
+      "js": ["assets/content.js"]
     }
   ]
 }
