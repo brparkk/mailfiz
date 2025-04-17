@@ -15,7 +15,7 @@
   "background": {
     "service_worker": "src/background.ts"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
   "content_scripts": [
     {
