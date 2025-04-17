@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
-// import { crx } from '@crxjs/vite-plugin';
-// import manifest from './manifest.json';
+import { crx } from '@crxjs/vite-plugin';
+import manifest from './manifest.json';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -13,13 +13,12 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env': env,
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), crx({ manifest })],
     root: 'src',
     build: {
       rollupOptions: {
         input: {
           popup: resolve('src/popup.html'),
-          background: resolve('src/background.ts'),
           content: resolve('src/content.ts'),
         },
         output: {
