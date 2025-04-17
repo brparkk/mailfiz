@@ -12,9 +12,6 @@
     "default_popup": "src/popup.html",
     "default_icon": "assets/icon-48.png"
   },
-  "background": {
-    "service_worker": "src/background.ts"
-  },
   "permissions": ["storage", "tabs", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
   "content_scripts": [
