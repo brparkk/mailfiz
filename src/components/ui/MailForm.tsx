@@ -8,18 +8,75 @@ import SelectButton from './SelectButton';
 
 type MailTone = 'default' | 'professional' | 'casual';
 
+// Gmail 탭으로 메시지 전송하는 함수
+async function sendToGmail(
+  text: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 현재 활성화된 탭 정보 가져오기
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    // 활성화된 탭이 없으면 에러
+    if (!tabs || tabs.length === 0) {
+      throw new Error('현재 활성화된 탭을 찾을 수 없습니다.');
+    }
+
+    // Gmail 탭인지 확인
+    const gmailTab = tabs[0];
+    if (!gmailTab.url?.includes('mail.google.com')) {
+      throw new Error(
+        'Gmail이 열려있지 않습니다. Gmail을 열고 다시 시도해주세요.'
+      );
+    }
+
+    // 메시지 전송
+    if (!gmailTab.id) {
+      throw new Error('탭 ID를 찾을 수 없습니다.');
+    }
+
+    const response = await chrome.tabs.sendMessage(gmailTab.id, {
+      action: 'insertEmailText',
+      text,
+    });
+
+    return response || { success: false, error: '응답이 없습니다.' };
+  } catch (error) {
+    console.error('Gmail에 메시지 전송 중 오류 발생:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
+}
+
 function MailForm() {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [selectedTone, setSelectedTone] = useState<MailTone>('default');
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [generatedEmail, setGeneratedEmail] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
     const formData = new FormData(e.target as HTMLFormElement);
     const messages = formData.get('mailfiz-textarea') as string;
     const apiKey = formData.get('mailfiz-api-key') as string;
+
+    // API 키 저장
+    try {
+      await chrome.storage.sync.set({ apiKey });
+    } catch (e) {
+      console.error('API 키 저장 중 오류 발생:', e);
+    }
+
     try {
       setIsLoading(true);
       const generatedMail = await generateText(
@@ -28,14 +85,39 @@ function MailForm() {
         selectedTone,
         apiKey
       );
+
+      setGeneratedEmail(generatedMail);
+
+      // 텍스트 생성 직후 자동으로 Gmail에 삽입
+      if (generatedMail) {
+        const result = await sendToGmail(generatedMail);
+        if (result.success) {
+          setSuccessMessage(
+            '이메일이 Gmail 에디터에 성공적으로 삽입되었습니다.'
+          );
+        } else {
+          setError(`Gmail에 삽입 실패: ${result.error || '알 수 없는 오류'}`);
+        }
+      }
+
       setIsLoading(false);
       return generatedMail;
     } catch (error) {
       console.error(error);
       setIsLoading(false);
-      setError('An error occurred while generating the email');
+      setError('이메일 생성 중 오류가 발생했습니다.');
       return null;
     }
+  };
+
+  // 생성된 이메일에서 본문만 추출하는 함수
+  const extractEmailBody = (email: string | null): string => {
+    if (!email) return '';
+
+    const match = email.match(
+      /\[Email Body Starts\]\s*([\s\S]*?)\s*\[Email Body Ends\]/
+    );
+    return match ? match[1].trim() : email;
   };
 
   return (
@@ -52,6 +134,7 @@ function MailForm() {
           AI-powered email drafting
         </span>
       </fieldset>
+      {/* TODO: Summary of Email Contents */}
       <fieldset>
         <legend className="block text-sm font-medium text-text-primary">
           API Key
@@ -115,11 +198,24 @@ function MailForm() {
           )}
         </div>
       </fieldset>
+      <fieldset>
+        <legend className="block text-sm font-medium text-text-primary">
+          Generated Email Preview
+        </legend>
+        <div className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
+          {generatedEmail
+            ? extractEmailBody(generatedEmail)
+            : '이메일이 생성되면 여기에 표시됩니다.'}
+        </div>
+      </fieldset>
       {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+      {successMessage && (
+        <div className="text-green-500 text-sm mt-1">{successMessage}</div>
+      )}
       <Button
         type="submit"
         variant="primary"
-        className="w-full h-12 rounded-[8px] mt-12 font-medium"
+        className="w-full h-12 rounded-[8px] mt-8 font-medium"
         disabled={isLoading}
       >
         {isLoading ? 'Generating...' : 'Generate'}
