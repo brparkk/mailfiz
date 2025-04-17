@@ -1,70 +1,114 @@
-import { useState } from 'react';
-import { generateText } from '../../lib/api';
+import { useEffect, useRef, useReducer } from 'react';
+import { generateText, generateEmailSummary } from '../../lib/api';
 import { languages } from '../../lib/constant';
-import { cn } from '../../lib/utils';
+import { cn, getBrowserLanguage } from '../../lib/utils';
+import { sendToGmail } from '../../lib/utils';
 import ArrowIcon from '../icons/ArrowIcon';
 import Button from './Button';
 import SelectButton from './SelectButton';
-
-type MailTone = 'default' | 'professional' | 'casual';
-
-// Gmail 탭으로 메시지 전송하는 함수
-async function sendToGmail(
-  text: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // 현재 활성화된 탭 정보 가져오기
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    // 활성화된 탭이 없으면 에러
-    if (!tabs || tabs.length === 0) {
-      throw new Error('현재 활성화된 탭을 찾을 수 없습니다.');
-    }
-
-    // Gmail 탭인지 확인
-    const gmailTab = tabs[0];
-    if (!gmailTab.url?.includes('mail.google.com')) {
-      throw new Error(
-        'Gmail이 열려있지 않습니다. Gmail을 열고 다시 시도해주세요.'
-      );
-    }
-
-    // 메시지 전송
-    if (!gmailTab.id) {
-      throw new Error('탭 ID를 찾을 수 없습니다.');
-    }
-
-    const response = await chrome.tabs.sendMessage(gmailTab.id, {
-      action: 'insertEmailText',
-      text,
-    });
-
-    return response || { success: false, error: '응답이 없습니다.' };
-  } catch (error) {
-    console.error('Gmail에 메시지 전송 중 오류 발생:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : '알 수 없는 오류가 발생했습니다.',
-    };
-  }
-}
+import {
+  initialMailFormState,
+  mailFormActions,
+  mailFormReducer,
+} from '../../store';
 
 function MailForm() {
-  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
-  const [selectedTone, setSelectedTone] = useState<MailTone>('default');
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0].label);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [generatedEmail, setGeneratedEmail] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(mailFormReducer, initialMailFormState);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 브라우저 언어 감지
+  useEffect(() => {
+    const detectBrowserLanguage = () => {
+      const baseLanguage = getBrowserLanguage();
+
+      // 지원하는 언어인지 확인
+      const supportedLanguage = languages.find(
+        (lang) => lang.value === baseLanguage
+      );
+
+      // 지원하는 언어면 해당 언어로, 아니면 기본값 'en'으로 설정
+      if (supportedLanguage) {
+        dispatch(mailFormActions.setLanguage(supportedLanguage.label));
+        dispatch(mailFormActions.setBrowserLanguage(baseLanguage));
+      } else {
+        dispatch(mailFormActions.setBrowserLanguage('en'));
+      }
+    };
+
+    detectBrowserLanguage();
+  }, []);
+
+  // 사용자가 입력한 텍스트 감지하여 자동으로 요약 생성
+  const handleDraftChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const draftText = e.target.value;
+
+    // 입력이 충분히 길면(50자 이상) 요약 시도
+    if (
+      draftText.length >= 50 &&
+      !state.content.draftSummary &&
+      !state.ui.isSummarizing
+    ) {
+      try {
+        dispatch(mailFormActions.setSummarizing(true));
+        dispatch(mailFormActions.setSummaryError(null));
+
+        // 요약 생성
+        const summary = await generateEmailSummary(
+          draftText,
+          state.form.browserLanguage
+        );
+        dispatch(mailFormActions.setDraftSummary(summary));
+      } catch (error) {
+        console.error('이메일 요약 생성 오류:', error);
+        dispatch(
+          mailFormActions.setSummaryError(
+            error instanceof Error
+              ? error.message
+              : '요약 생성 중 오류가 발생했습니다.'
+          )
+        );
+      } finally {
+        dispatch(mailFormActions.setSummarizing(false));
+      }
+    }
+  };
+
+  // 요약 내용을 초기화하고 새로 생성
+  const handleRegenerateSummary = async () => {
+    if (!textareaRef.current?.value) {
+      dispatch(mailFormActions.setSummaryError('요약할 내용이 없습니다.'));
+      return;
+    }
+
+    try {
+      dispatch(mailFormActions.setSummarizing(true));
+      dispatch(mailFormActions.setSummaryError(null));
+
+      // 요약 생성
+      const summary = await generateEmailSummary(
+        textareaRef.current.value,
+        state.form.browserLanguage
+      );
+      dispatch(mailFormActions.setDraftSummary(summary));
+    } catch (error) {
+      console.error('이메일 요약 생성 오류:', error);
+      dispatch(
+        mailFormActions.setSummaryError(
+          error instanceof Error
+            ? error.message
+            : '요약 생성 중 오류가 발생했습니다.'
+        )
+      );
+    } finally {
+      dispatch(mailFormActions.setSummarizing(false));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMessage(null);
+    dispatch(mailFormActions.resetMessages());
 
     const formData = new FormData(e.target as HTMLFormElement);
     const messages = formData.get('mailfiz-textarea') as string;
@@ -78,34 +122,40 @@ function MailForm() {
     }
 
     try {
-      setIsLoading(true);
+      dispatch(mailFormActions.setLoading(true));
       const generatedMail = await generateText(
         messages,
-        selectedLanguage,
-        selectedTone,
+        state.form.selectedLanguage,
+        state.form.selectedTone,
         apiKey
       );
 
-      setGeneratedEmail(generatedMail);
+      dispatch(mailFormActions.setGeneratedEmail(generatedMail));
 
       // 텍스트 생성 직후 자동으로 Gmail에 삽입
       if (generatedMail) {
         const result = await sendToGmail(generatedMail);
         if (result.success) {
-          setSuccessMessage(
-            '이메일이 Gmail 에디터에 성공적으로 삽입되었습니다.'
+          dispatch(
+            mailFormActions.setSuccessMessage(
+              '이메일이 Gmail 에디터에 성공적으로 삽입되었습니다.'
+            )
           );
         } else {
-          setError(`Gmail에 삽입 실패: ${result.error || '알 수 없는 오류'}`);
+          dispatch(
+            mailFormActions.setError(
+              `Gmail에 삽입 실패: ${result.error || '알 수 없는 오류'}`
+            )
+          );
         }
       }
 
-      setIsLoading(false);
+      dispatch(mailFormActions.setLoading(false));
       return generatedMail;
     } catch (error) {
       console.error(error);
-      setIsLoading(false);
-      setError('이메일 생성 중 오류가 발생했습니다.');
+      dispatch(mailFormActions.setLoading(false));
+      dispatch(mailFormActions.setError('이메일 생성 중 오류가 발생했습니다.'));
       return null;
     }
   };
@@ -134,7 +184,44 @@ function MailForm() {
           AI-powered email drafting
         </span>
       </fieldset>
-      {/* TODO: Summary of Email Contents */}
+
+      {/* 이메일 요약 섹션 */}
+      <fieldset>
+        <div className="flex justify-between items-center">
+          <legend className="block text-sm font-medium text-text-primary">
+            Email Summary
+          </legend>
+          {state.content.draftSummary && (
+            <button
+              type="button"
+              onClick={handleRegenerateSummary}
+              className="text-xs text-blue-500 hover:text-blue-700"
+              disabled={state.ui.isSummarizing}
+            >
+              {state.ui.isSummarizing ? 'Regenerating...' : 'Regenerate'}
+            </button>
+          )}
+        </div>
+        <div className="w-full h-auto min-h-[120px] p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
+          {state.ui.isSummarizing ? (
+            <div className="text-gray-500">생성 중...</div>
+          ) : state.content.draftSummary ? (
+            <div className="whitespace-pre-line">
+              {state.content.draftSummary}
+            </div>
+          ) : (
+            <div className="text-gray-500">
+              이메일 내용을 입력하면 자동으로 요약이 생성됩니다.
+            </div>
+          )}
+        </div>
+        {state.messages.summaryError && (
+          <div className="text-red-500 text-xs mt-1">
+            {state.messages.summaryError}
+          </div>
+        )}
+      </fieldset>
+
       <fieldset>
         <legend className="block text-sm font-medium text-text-primary">
           API Key
@@ -147,9 +234,11 @@ function MailForm() {
         />
       </fieldset>
       <textarea
+        ref={textareaRef}
         name="mailfiz-textarea"
         placeholder="Enter your rough draft here..."
         className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary"
+        onChange={handleDraftChange}
       />
       <fieldset>
         <legend className="block text-sm font-medium text-text-primary">
@@ -159,8 +248,8 @@ function MailForm() {
           {['default', 'professional', 'casual'].map((tone) => (
             <Button
               key={tone}
-              className={cn(selectedTone === tone && 'active')}
-              onClick={() => setSelectedTone(tone as MailTone)}
+              className={cn(state.form.selectedTone === tone && 'active')}
+              onClick={() => dispatch(mailFormActions.setTone(tone as any))}
             >
               {tone}
             </Button>
@@ -174,22 +263,22 @@ function MailForm() {
         <div className="relative">
           <button
             type="button"
-            onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+            onClick={() => dispatch(mailFormActions.toggleLanguageDropdown())}
             className="flex justify-between items-center w-full mt-3 border border-border rounded-[8px] py-2 px-3 text-sm text-text-primary"
           >
-            <span>{selectedLanguage}</span>
-            <ArrowIcon isOpen={isLanguageOpen} />
+            <span>{state.form.selectedLanguage}</span>
+            <ArrowIcon isOpen={state.ui.isLanguageOpen} />
           </button>
-          {isLanguageOpen && (
+          {state.ui.isLanguageOpen && (
             <div className="absolute w-full mt-1 bg-white border border-border rounded-[8px] shadow-lg z-10">
               {languages.map((lang) => (
                 <SelectButton
                   key={lang.value}
                   onClick={() => {
-                    setSelectedLanguage(lang.label);
-                    setIsLanguageOpen(false);
+                    dispatch(mailFormActions.setLanguage(lang.label));
+                    dispatch(mailFormActions.toggleLanguageDropdown());
                   }}
-                  isSelected={selectedLanguage === lang.label}
+                  isSelected={state.form.selectedLanguage === lang.label}
                 >
                   {lang.label}
                 </SelectButton>
@@ -203,22 +292,26 @@ function MailForm() {
           Generated Email Preview
         </legend>
         <div className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
-          {generatedEmail
-            ? extractEmailBody(generatedEmail)
+          {state.content.generatedEmail
+            ? extractEmailBody(state.content.generatedEmail)
             : '이메일이 생성되면 여기에 표시됩니다.'}
         </div>
       </fieldset>
-      {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-      {successMessage && (
-        <div className="text-green-500 text-sm mt-1">{successMessage}</div>
+      {state.messages.error && (
+        <div className="text-red-500 text-sm mt-1">{state.messages.error}</div>
+      )}
+      {state.messages.successMessage && (
+        <div className="text-green-500 text-sm mt-1">
+          {state.messages.successMessage}
+        </div>
       )}
       <Button
         type="submit"
         variant="primary"
         className="w-full h-12 rounded-[8px] mt-8 font-medium"
-        disabled={isLoading}
+        disabled={state.ui.isLoading}
       >
-        {isLoading ? 'Generating...' : 'Generate'}
+        {state.ui.isLoading ? 'Generating...' : 'Generate'}
       </Button>
     </form>
   );
