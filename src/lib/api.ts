@@ -34,9 +34,17 @@ Instructions:
 Format your output like this:
 ---
 [Email Body Starts]
+{{Appropriate greeting based on tone and context}}
 
-{{Generated email here}}
+{{Brief introduction paragraph related to the purpose of the email}}
 
+{{Main message content with appropriate explanations or details}}
+
+{{Concluding remarks summarizing main points or next steps}}
+
+{{Appropriate closing phrase based on tone}}
+
+{{Signature}}
 [Email Body Ends]
 ---
 `;
