@@ -45,6 +45,9 @@ jobs:
             echo "Test coverage is above 6%. Current coverage: $COVERAGE%"
           fi
 
+      - name: Cache Clean
+        run: npm cache clean --force
+
       - name: Build project
         run: npm run build
 
