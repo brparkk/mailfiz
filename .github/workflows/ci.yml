@@ -20,9 +20,11 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+          
+      - name: Install dependencies with no caches
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
 
       - name: Lint code
         run: npm run lint
