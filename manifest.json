@@ -10,7 +10,9 @@
   },
   "action": {
     "default_popup": "src/popup.html",
-    "default_icon": "src/assets/icon-48.png"
+    "default_icon": "src/assets/icon-48.png",
+    "default_title": "MailFiz",
+    "default_width": 360
   },
   "permissions": ["storage", "tabs", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
