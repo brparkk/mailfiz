@@ -30,34 +30,35 @@ Instructions:
 - In the body, provide an appropriate response, explanation, or message based on the context.  
 - End with a polite closing that fits the tone and situation.  
 - Do not include a signature unless specifically requested.
-- Ensure proper spacing between sections.
+- Use proper spacing with empty lines between paragraphs.
+- Make sure to include TWO newlines between each section (greeting, introduction, main content, etc).
 
-Format your output like this:
+Format your output exactly as follows:
 ---
 [Email Body Starts]
-[Greeting]: {greeting}
+{greeting}
 
-[Introduction]: {introduction}
+{introduction}
 
-[Main Content]: {main_content}
+{main_content}
 
-[Concluding Remarks]: {concluding_remarks}
+{concluding_remarks}
 
-[Closing]: {closing}
+{closing}
 
-[Signature]: {signature}
+{signature}
 [Email Body Ends]
 ---
 
 Where:
-- {greeting}: Appropriate greeting based on tone and context
+- {greeting}: Appropriate greeting based on tone and context (e.g., "Dear Mr. Smith," or "Hello John,")
 - {introduction}: Brief introduction paragraph related to the purpose of the email
 - {main_content}: Main message content with appropriate explanations or details
 - {concluding_remarks}: Concluding remarks summarizing main points or next steps
-- {closing}: Appropriate closing phrase based on tone
-- {signature}: Signature (only if requested)
+- {closing}: Appropriate closing phrase based on tone (e.g., "Best regards," or "Sincerely,")
+- {signature}: Signature only if requested, otherwise leave blank
 
-Remember to include proper spacing between paragraphs.
+IMPORTANT: Please leave an empty line between each section. Do not remove the empty lines or the email will be difficult to read.
 `;
 
 const summaryPrompt = (message: string, language: string) => `
@@ -71,9 +72,9 @@ Instructions:
 - The summary should be in the specified language.
 - Format your response exactly according to the template below.
 - Keep each section to a maximum of 1-2 lines.
-- Ensure proper spacing between sections.
+- Ensure proper spacing with empty lines between sections.
 
-Format your response like this:
+Format your response exactly as follows:
 ---
 [Summary Starts]
 [Subject]: {subject}
@@ -91,6 +92,8 @@ Where:
 - {purpose}: One line describing why this email is being written
 - {content_summary}: One to two lines summarizing the main content
 - {action_items}: Any requests, deadlines, or actions mentioned in the email, if applicable. If none, write "None".
+
+IMPORTANT: Please leave an empty line between each section. Do not remove the empty lines or the summary will be difficult to read.
 `;
 
 export const generateText = async (

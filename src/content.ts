@@ -51,12 +51,44 @@ function insertTextToEditor(text: string): void {
     return;
   }
 
-  // 에디터에 텍스트 삽입
-  editor.innerHTML = text;
+  try {
+    // 줄바꿈 문자를 HTML <br> 태그로 변환
+    // 1. 단일 줄바꿈 처리
+    let formattedText = text.replace(/\n/g, '<br>');
 
-  // 변경 이벤트 발생시켜 Gmail이 변경을 인식하도록 함
-  const event = new Event('input', { bubbles: true });
-  editor.dispatchEvent(event);
+    // 2. 이중 줄바꿈(문단 구분)을 더 큰 간격으로 처리
+    formattedText = formattedText.replace(/<br><br>/g, '<br><br>');
+
+    // 3. 공백 유지
+    formattedText = formattedText.replace(/ {2,}/g, function (match) {
+      return '&nbsp;'.repeat(match.length);
+    });
+
+    // 4. 의미있는 구조를 위해 단락으로 묶기
+    // 빈 줄로 구분된 단락을 <p> 태그로 감싸기
+    const paragraphs = formattedText.split(/<br><br>/g);
+    formattedText = paragraphs
+      .map((p) => (p.trim() ? `<p>${p}</p>` : ''))
+      .join('');
+
+    console.log('포맷된 텍스트:', formattedText);
+
+    // 에디터에 텍스트 삽입
+    editor.innerHTML = formattedText;
+
+    // 변경 이벤트 발생시켜 Gmail이 변경을 인식하도록 함
+    const event = new Event('input', { bubbles: true });
+    editor.dispatchEvent(event);
+
+    console.log('이메일 텍스트 삽입 성공 (줄바꿈 처리 적용)');
+  } catch (error) {
+    console.error('텍스트 삽입 중 오류 발생:', error);
+
+    // 오류 발생 시 원본 텍스트 그대로 삽입 시도
+    editor.innerHTML = text;
+    const event = new Event('input', { bubbles: true });
+    editor.dispatchEvent(event);
+  }
 }
 
 // 요약 텍스트를 Gmail 에디터에 삽입하는 함수
