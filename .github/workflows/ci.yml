@@ -35,8 +35,10 @@ jobs:
           CI: true
 
       - name: Check test coverage
+        id: coverage
         run: |
           COVERAGE=$(npx vitest run --coverage | grep "All files" | awk '{print $4}' | sed 's/%//g')
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
           # todo 6% to 60%
           if (( $(echo "$COVERAGE < 6" | bc -l) )); then
             echo "Test coverage is below 6%. Current coverage: $COVERAGE%"
@@ -44,6 +46,43 @@ jobs:
           else
             echo "Test coverage is above 6%. Current coverage: $COVERAGE%"
           fi
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const coverage = ${{ steps.coverage.outputs.coverage }};
+            
+            // 테스트 커버리지 배지 색상 결정
+            let color = 'red';
+            if (coverage >= 80) color = 'brightgreen';
+            else if (coverage >= 70) color = 'green';
+            else if (coverage >= 60) color = 'yellowgreen';
+            else if (coverage >= 50) color = 'yellow';
+            else if (coverage >= 40) color = 'orange';
+            else if (coverage >= 20) color = 'lightgrey';
+            
+            // 마크다운 형식의 커버리지 정보 생성
+            const coverageBadge = `![Coverage](https://img.shields.io/badge/coverage-${coverage}%25-${color})`;
+            const body = `## 테스트 커버리지 결과
+            
+            ${coverageBadge}
+            
+            **현재 테스트 커버리지: ${coverage}%**
+            
+            - 테스트 커버리지 상세 정보는 Artifacts에서 확인 가능합니다.
+            - 코드 품질 향상을 위해 테스트 커버리지 60% 이상을 목표로 합니다.
+            `;
+            
+            // PR에 댓글 달기
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
 
       - name: Build project
         run: npm run build
