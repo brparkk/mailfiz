@@ -203,43 +203,10 @@ function MailForm() {
     };
   }, []);
 
-  // 사용자가 입력한 텍스트 감지하여 자동으로 요약 생성
-  const handleDraftChange = async (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const draftText = e.target.value;
-
-    // 입력이 충분히 길면(50자 이상) 요약 시도
-    if (
-      draftText.length >= 50 &&
-      !state.content.draftSummary &&
-      !state.ui.isSummarizing &&
-      apiKeyInputRef.current?.value
-    ) {
-      try {
-        dispatch(mailFormActions.setSummarizing(true));
-        dispatch(mailFormActions.setSummaryError(null));
-
-        // 요약 생성
-        const summary = await generateEmailSummary(
-          draftText,
-          state.form.browserLanguage,
-          apiKeyInputRef.current.value
-        );
-        dispatch(mailFormActions.setDraftSummary(summary));
-      } catch (error) {
-        console.error('이메일 요약 생성 오류:', error);
-        dispatch(
-          mailFormActions.setSummaryError(
-            error instanceof Error
-              ? error.message
-              : '요약 생성 중 오류가 발생했습니다.'
-          )
-        );
-      } finally {
-        dispatch(mailFormActions.setSummarizing(false));
-      }
-    }
+  // 사용자가 입력한 텍스트 감지 - 자동 요약 기능 비활성화
+  const handleDraftChange = () => {
+    // 텍스트 입력 감지만 하고 자동 요약 생성은 하지 않음
+    // Generate 버튼 클릭 시에만 요약 생성
   };
 
   // 요약 내용을 초기화하고 새로 생성
@@ -265,6 +232,26 @@ function MailForm() {
         apiKeyInputRef.current.value
       );
       dispatch(mailFormActions.setDraftSummary(summary));
+
+      // 요약을 Gmail에 삽입 시도
+      try {
+        const tabs = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (
+          tabs &&
+          tabs.length > 0 &&
+          tabs[0].url?.includes('mail.google.com')
+        ) {
+          await chrome.tabs.sendMessage(tabs[0].id!, {
+            action: 'insertEmailSummary',
+            summary: summary,
+          });
+        }
+      } catch (insertError) {
+        console.error('요약 삽입 오류:', insertError);
+      }
     } catch (error) {
       console.error('이메일 요약 생성 오류:', error);
       dispatch(
@@ -448,6 +435,55 @@ function MailForm() {
 
     try {
       dispatch(mailFormActions.setLoading(true));
+
+      // 먼저 요약 생성
+      if (messages && apiKey) {
+        try {
+          dispatch(mailFormActions.setSummarizing(true));
+
+          // 요약 생성
+          const summary = await generateEmailSummary(
+            messages,
+            state.form.browserLanguage,
+            apiKey
+          );
+
+          dispatch(mailFormActions.setDraftSummary(summary));
+
+          // 요약을 Gmail에 삽입 시도
+          try {
+            const tabs = await chrome.tabs.query({
+              active: true,
+              currentWindow: true,
+            });
+            if (
+              tabs &&
+              tabs.length > 0 &&
+              tabs[0].url?.includes('mail.google.com')
+            ) {
+              await chrome.tabs.sendMessage(tabs[0].id!, {
+                action: 'insertEmailSummary',
+                summary: summary,
+              });
+            }
+          } catch (insertError) {
+            console.error('요약 삽입 오류:', insertError);
+          }
+        } catch (summaryError) {
+          console.error('요약 생성 오류:', summaryError);
+          dispatch(
+            mailFormActions.setSummaryError(
+              summaryError instanceof Error
+                ? summaryError.message
+                : '요약 생성 중 오류가 발생했습니다.'
+            )
+          );
+        } finally {
+          dispatch(mailFormActions.setSummarizing(false));
+        }
+      }
+
+      // 이메일 생성
       const generatedMail = await generateText(
         messages,
         state.form.selectedLanguage,
