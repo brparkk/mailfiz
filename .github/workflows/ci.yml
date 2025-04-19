@@ -54,7 +54,7 @@ jobs:
 
       - name: Package Extension
         run: |
-          cd src/dist
+          cd dist
           zip -r ../extension.zip .
 
       - name: Upload test reports
@@ -70,5 +70,5 @@ jobs:
         with:
           name: extension-package
           path: |
-            src/dist/
-            src/extension.zip 
+            dist/
+            extension.zip 
