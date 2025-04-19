@@ -22,7 +22,6 @@ body {
 #root {
   width: 100%;
   min-width: 320px;
-  margin-top: 16px;
 }
 
 textarea::-webkit-resizer {

@@ -1,7 +1,11 @@
 import { useEffect, useRef, useReducer } from 'react';
 import { generateText, generateEmailSummary } from '../../lib/api';
 import { languages } from '../../lib/constant';
-import { cn, getBrowserLanguage } from '../../lib/utils';
+import {
+  cn,
+  getBrowserLanguage,
+  getEmailContentFromGmail,
+} from '../../lib/utils';
 import { sendToGmail } from '../../lib/utils';
 import ArrowIcon from '../icons/ArrowIcon';
 import Button from './Button';
@@ -16,6 +20,7 @@ function MailForm() {
   const [state, dispatch] = useReducer(mailFormReducer, initialMailFormState);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const apiKeyInputRef = useRef<HTMLInputElement>(null);
+  const apiKeyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 브라우저 언어 감지
   useEffect(() => {
@@ -51,6 +56,15 @@ function MailForm() {
     };
 
     loadStoredApiKey();
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (apiKeyTimerRef.current) {
+        clearTimeout(apiKeyTimerRef.current);
+      }
+    };
   }, []);
 
   // 사용자가 입력한 텍스트 감지하여 자동으로 요약 생성
@@ -126,6 +140,79 @@ function MailForm() {
       );
     } finally {
       dispatch(mailFormActions.setSummarizing(false));
+    }
+  };
+
+  // Handle API key input with debounce for auto-summary generation
+  const handleApiKeyInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const apiKey = e.target.value;
+
+    // Clear any existing timer
+    if (apiKeyTimerRef.current) {
+      clearTimeout(apiKeyTimerRef.current);
+    }
+
+    // If API key is not empty
+    if (apiKey) {
+      // Set a new timer for 3 seconds
+      apiKeyTimerRef.current = setTimeout(async () => {
+        try {
+          dispatch(mailFormActions.setSummarizing(true));
+          dispatch(mailFormActions.setSummaryError(null));
+
+          // 먼저 Gmail에서 이메일 내용 가져오기 시도
+          let gmailContent = '';
+          try {
+            const gmailResponse = await getEmailContentFromGmail();
+            // Gmail 내용 가져오기 성공 시 해당 내용 사용
+            if (
+              gmailResponse &&
+              gmailResponse.success &&
+              gmailResponse.content
+            ) {
+              // 내용을 텍스트 영역에 설정 (HTML 태그 제거)
+              gmailContent = gmailResponse.content.replace(/<[^>]*>/g, '');
+              if (textareaRef.current) {
+                textareaRef.current.value = gmailContent;
+              }
+            }
+          } catch (error) {
+            console.error('Gmail 내용 가져오기 오류:', error);
+            // 오류 발생 시 무시하고 계속 진행 (텍스트 영역의 내용 사용)
+          }
+
+          // Gmail에서 내용을 가져왔거나 텍스트 영역에 내용이 있는 경우
+          if (gmailContent || textareaRef.current?.value) {
+            // 요약 생성
+            const summary = await generateEmailSummary(
+              gmailContent || textareaRef.current!.value,
+              state.form.browserLanguage,
+              apiKey
+            );
+
+            dispatch(mailFormActions.setDraftSummary(summary));
+          }
+          // 내용이 없는 경우
+          else {
+            dispatch(
+              mailFormActions.setSummaryError(
+                '이메일 내용이 없습니다. Gmail에서 내용을 가져오지 못했거나 작성된 내용이 없습니다.'
+              )
+            );
+          }
+        } catch (error) {
+          console.error('이메일 요약 생성 오류:', error);
+          dispatch(
+            mailFormActions.setSummaryError(
+              error instanceof Error
+                ? error.message
+                : '요약 생성 중 오류가 발생했습니다.'
+            )
+          );
+        } finally {
+          dispatch(mailFormActions.setSummarizing(false));
+        }
+      }, 3000); // 3 seconds delay
     }
   };
 
@@ -219,6 +306,7 @@ function MailForm() {
           name="mailfiz-api-key"
           placeholder="Enter your API key"
           className="w-full h-9.5 mt-2 rounded-[8px] px-4 py-2 font-light text-xs border border-border placeholder:text-input-placeholder placeholder:text-xs"
+          onChange={handleApiKeyInput}
         />
       </fieldset>
 
@@ -251,6 +339,7 @@ function MailForm() {
               ref={textareaRef}
               name="mailfiz-summary-email"
               placeholder="Email Summary"
+              className="w-full h-auto"
               onChange={handleDraftChange}
             />
           )}
