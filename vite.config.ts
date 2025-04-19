@@ -15,18 +15,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react(), tailwindcss(), crx({ manifest })],
     build: {
-      rollupOptions: {
-        input: {
-          popup: resolve(__dirname, 'src/popup.html'),
-          content: resolve(__dirname, 'src/content.ts'),
-        },
-        output: {
-          entryFileNames: 'assets/[name].js',
-          chunkFileNames: 'assets/[name].js',
-          assetFileNames: 'assets/[name].[ext]',
-        },
-      },
-      outDir: 'src/dist',
+      outDir: 'dist',
       emptyOutDir: true,
       target: 'esnext',
       sourcemap: mode === 'development',
