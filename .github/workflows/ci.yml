@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, temp]
   pull_request:
-    branches: [main, master]
+    branches: [main, temp]
   workflow_dispatch:
 
 jobs:
@@ -48,13 +48,9 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Copy manifest.json
-        run: |
-          cp manifest.json src/dist/manifest.json
-
       - name: Package Extension
         run: |
-          cd src/dist
+          cd dist
           zip -r ../extension.zip .
 
       - name: Upload test reports
@@ -70,5 +66,5 @@ jobs:
         with:
           name: extension-package
           path: |
-            src/dist/
-            src/extension.zip 
+            dist/
+            extension.zip 

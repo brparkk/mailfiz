@@ -1,10 +1,10 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from 'vite';
+import { resolve } from 'path';
 
-// import { crx } from '@crxjs/vite-plugin';
-// import manifest from './manifest.json';
+import { crx } from '@crxjs/vite-plugin';
+import manifest from './manifest.json';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -13,33 +13,29 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env': env,
     },
-    plugins: [react(), tailwindcss()],
-    root: 'src',
+    plugins: [react(), tailwindcss(), crx({ manifest })],
     build: {
-      rollupOptions: {
-        input: {
-          popup: resolve('src/popup.html'),
-          background: resolve('src/background.ts'),
-          content: resolve('src/content.ts'),
-        },
-        output: {
-          entryFileNames: 'assets/[name].js',
-          chunkFileNames: 'assets/[name].js',
-          assetFileNames: 'assets/[name].[ext]',
-        },
-      },
       outDir: 'dist',
       emptyOutDir: true,
       target: 'esnext',
+      sourcemap: mode === 'development',
+    },
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src'),
+      },
     },
     server: {
       port: 5173,
       strictPort: true,
-      open: '/popup.html',
+      open: '/src/popup.html',
     },
     preview: {
       port: 5173,
       strictPort: true,
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom'],
     },
   };
 });

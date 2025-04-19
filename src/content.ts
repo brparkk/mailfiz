@@ -21,7 +21,7 @@ function insertTextToEditor(text: string): void {
 }
 
 // MailForm으로부터 메시지 받기
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sendResponse) => {
   if (message.action === 'insertEmailText') {
     try {
       // 정규식을 사용하여 이메일 본문만 추출
