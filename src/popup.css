@@ -19,6 +19,11 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+#root {
+  width: 100%;
+  min-width: 320px;
+}
+
 textarea::-webkit-resizer {
   display: none;
 }

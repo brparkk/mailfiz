@@ -23,5 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables
+.env
+.env.*
+
 # coverage
 src/coverage/*
+coverage/*
+
+# src/dist
+src/dist/*

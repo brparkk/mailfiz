@@ -1,38 +1,51 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from 'vite';
+import { resolve } from 'path';
+import { configDefaults } from 'vitest/config';
 
-// import { crx } from '@crxjs/vite-plugin';
-// import manifest from './manifest.json';
+import { crx } from '@crxjs/vite-plugin';
+import manifest from './manifest.json';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  root: 'src',
-  build: {
-    rollupOptions: {
-      input: {
-        popup: resolve('src/popup.html'),
-        background: resolve('src/background.ts'),
-        content: resolve('src/content.ts'),
-      },
-      output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    define: {
+      'process.env': env,
+    },
+    plugins: [react(), tailwindcss(), crx({ manifest })],
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+      target: 'esnext',
+      sourcemap: mode === 'development',
+    },
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src'),
       },
     },
-    outDir: 'dist',
-    emptyOutDir: true,
-    target: 'esnext',
-  },
-  server: {
-    port: 5173,
-    strictPort: true,
-    open: '/popup.html',
-  },
-  preview: {
-    port: 5173,
-    strictPort: true,
-  },
+    server: {
+      port: 5173,
+      strictPort: true,
+      open: '/src/popup.html',
+    },
+    preview: {
+      port: 5173,
+      strictPort: true,
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom'],
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts'],
+      exclude: [...configDefaults.exclude, 'e2e/*'],
+      coverage: {
+        reporter: ['text', 'json', 'html'],
+      },
+    },
+  };
 });
