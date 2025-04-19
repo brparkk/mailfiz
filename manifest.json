@@ -11,8 +11,7 @@
   "action": {
     "default_popup": "src/popup.html",
     "default_icon": "src/assets/icon-48.png",
-    "default_title": "MailFiz",
-    "default_width": 360
+    "default_title": "MailFiz"
   },
   "permissions": ["storage", "tabs", "activeTab"],
   "host_permissions": ["https://mail.google.com/*"],
@@ -21,5 +20,9 @@
       "matches": ["https://mail.google.com/*"],
       "js": ["src/content.ts"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  }
 }

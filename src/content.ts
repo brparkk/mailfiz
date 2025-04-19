@@ -59,19 +59,65 @@ function insertTextToEditor(text: string): void {
   editor.dispatchEvent(event);
 }
 
+// 요약 텍스트를 Gmail 에디터에 삽입하는 함수
+function insertSummaryToEditor(summary: string): void {
+  const editor = findGmailEditor();
+  if (!editor) {
+    console.error('Gmail 에디터를 찾을 수 없습니다.');
+    return;
+  }
+
+  try {
+    // 현재 에디터 내용 확인
+    const currentContent = editor.innerHTML;
+
+    // 요약 형식 정의
+    const formattedSummary = `
+<div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
+  <div style="font-weight: bold; margin-bottom: 5px;">Email Summary:</div>
+  <div>${summary.replace(/\n/g, '<br>')}</div>
+</div>
+<br>
+`;
+
+    // 요약을 에디터 시작 부분에 삽입
+    editor.innerHTML = formattedSummary + currentContent;
+
+    // 변경 이벤트 발생시켜 Gmail이 변경을 인식하도록 함
+    const event = new Event('input', { bubbles: true });
+    editor.dispatchEvent(event);
+
+    console.log('요약 삽입 성공');
+  } catch (error) {
+    console.error('요약 삽입 중 오류 발생:', error);
+  }
+}
+
 // MailForm으로부터 메시지 받기
-chrome.runtime.onMessage.addListener((message, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  console.log(
+    'Chrome 확장 프로그램으로부터 메시지 수신:',
+    message.action || message
+  );
+
   if (message.action === 'getEmailContent') {
     try {
       // 먼저 메일 내용을 확인
+      console.log('메일 내용 확인 시도');
       const messageContent = getMessageContent();
+      console.log('가져온 메일 내용:', messageContent ? '있음' : '없음');
+
       if (messageContent) {
+        console.log('메일 내용 반환');
         sendResponse({ success: true, content: messageContent });
         return true;
       }
 
       // 메일 내용이 없으면 에디터 내용을 확인
+      console.log('에디터 내용 확인 시도');
       const editorContent = getEditorContent();
+      console.log('가져온 에디터 내용:', editorContent ? '있음' : '없음');
+
       sendResponse({ success: true, content: editorContent });
     } catch (error) {
       console.error('이메일 내용 가져오기 오류:', error);
@@ -82,6 +128,7 @@ chrome.runtime.onMessage.addListener((message, sendResponse) => {
 
   if (message.action === 'insertEmailText') {
     try {
+      console.log('이메일 텍스트 삽입 요청 수신');
       // 정규식을 사용하여 이메일 본문만 추출
       const generatedText = message.text;
       if (!generatedText) {
@@ -97,6 +144,7 @@ chrome.runtime.onMessage.addListener((message, sendResponse) => {
 
       // 생성된 텍스트를 에디터에 삽입
       insertTextToEditor(emailBody);
+      console.log('이메일 텍스트 삽입 성공');
       sendResponse({ success: true });
     } catch (error: unknown) {
       console.error('텍스트 삽입 중 오류 발생:', error);
@@ -106,5 +154,31 @@ chrome.runtime.onMessage.addListener((message, sendResponse) => {
     }
     return true;
   }
+
+  // 새 메시지 핸들러: 요약 삽입
+  if (message.action === 'insertEmailSummary') {
+    try {
+      console.log(
+        '요약 삽입 요청 수신:',
+        message.summary ? '요약 있음' : '요약 없음'
+      );
+
+      if (!message.summary) {
+        throw new Error('요약 내용이 없습니다.');
+      }
+
+      // 요약을 에디터에 삽입
+      insertSummaryToEditor(message.summary);
+      console.log('요약 삽입 완료');
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('요약 삽입 중 오류 발생:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : '알 수 없는 오류';
+      sendResponse({ success: false, error: errorMessage });
+    }
+    return true;
+  }
+
   return true; // 비동기 응답을 위해 true 반환
 });

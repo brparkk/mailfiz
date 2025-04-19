@@ -22,6 +22,39 @@ function MailForm() {
   const apiKeyInputRef = useRef<HTMLInputElement>(null);
   const apiKeyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 팝업이 열려있는 상태 유지
+  useEffect(() => {
+    // 페이지가 로드될 때 포커스를 어떤 요소에 설정
+    if (apiKeyInputRef.current) {
+      apiKeyInputRef.current.focus();
+    }
+
+    // 문서 클릭 이벤트 리스너 추가
+    const handleDocumentClick = (e: MouseEvent) => {
+      // 클릭이 팝업 내부에서 발생한 경우, 이벤트 버블링 중지
+      e.stopPropagation();
+    };
+
+    // 문서에 클릭 이벤트 리스너 추가
+    document.addEventListener('click', handleDocumentClick);
+
+    // 팝업 상태 유지 요청 주기적으로 보내기
+    const keepAliveTimer = setInterval(() => {
+      try {
+        // @ts-ignore
+        chrome.runtime.sendMessage({ action: 'keepPopupOpen' });
+      } catch (error) {
+        console.error('팝업 상태 유지 요청 오류:', error);
+      }
+    }, 5000); // 5초마다 요청
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+      clearInterval(keepAliveTimer);
+    };
+  }, []);
+
   // 브라우저 언어 감지
   useEffect(() => {
     const detectBrowserLanguage = () => {
@@ -160,25 +193,67 @@ function MailForm() {
           dispatch(mailFormActions.setSummarizing(true));
           dispatch(mailFormActions.setSummaryError(null));
 
-          // 먼저 Gmail에서 이메일 내용 가져오기 시도
-          let gmailContent = '';
+          // 먼저 현재 탭이 Gmail인지 확인
+          let isGmailTab = false;
           try {
-            const gmailResponse = await getEmailContentFromGmail();
-            // Gmail 내용 가져오기 성공 시 해당 내용 사용
-            if (
-              gmailResponse &&
-              gmailResponse.success &&
-              gmailResponse.content
-            ) {
-              // 내용을 텍스트 영역에 설정 (HTML 태그 제거)
-              gmailContent = gmailResponse.content.replace(/<[^>]*>/g, '');
-              if (textareaRef.current) {
-                textareaRef.current.value = gmailContent;
-              }
+            const tabs = await chrome.tabs.query({
+              active: true,
+              currentWindow: true,
+            });
+
+            if (tabs && tabs.length > 0 && tabs[0].url) {
+              isGmailTab = tabs[0].url.includes('mail.google.com');
+              console.log('현재 탭이 Gmail인지 확인:', isGmailTab);
             }
-          } catch (error) {
-            console.error('Gmail 내용 가져오기 오류:', error);
-            // 오류 발생 시 무시하고 계속 진행 (텍스트 영역의 내용 사용)
+          } catch (tabError) {
+            console.error('탭 정보 가져오기 오류:', tabError);
+          }
+
+          // Gmail에서 이메일 내용 가져오기 시도
+          let gmailContent = '';
+          if (isGmailTab) {
+            try {
+              console.log('Gmail 내용 가져오기 시도...');
+              // 시간 초과를 추가하여 응답 대기 시간 설정
+              const gmailResponsePromise = getEmailContentFromGmail();
+
+              // 2초 후에 타임아웃
+              const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(
+                  () => reject(new Error('Gmail 내용 가져오기 시간 초과')),
+                  2000
+                );
+              });
+
+              // Promise.race로 먼저 완료되는 것을 선택
+              const gmailResponse = (await Promise.race([
+                gmailResponsePromise,
+                timeoutPromise,
+              ])) as { success: boolean; content?: string; error?: string };
+
+              console.log('Gmail 응답:', gmailResponse);
+
+              // Gmail 내용 가져오기 성공 시 해당 내용 사용
+              if (
+                gmailResponse &&
+                gmailResponse.success &&
+                gmailResponse.content
+              ) {
+                console.log('Gmail 내용 가져오기 성공');
+                // 내용을 텍스트 영역에 설정 (HTML 태그 제거)
+                gmailContent = gmailResponse.content.replace(/<[^>]*>/g, '');
+                if (textareaRef.current) {
+                  textareaRef.current.value = gmailContent;
+                }
+              }
+            } catch (error) {
+              console.error('Gmail 내용 가져오기 오류:', error);
+              // 오류 발생 시 무시하고 계속 진행 (텍스트 영역의 내용 사용)
+            }
+          } else {
+            console.log(
+              '현재 탭이 Gmail이 아니므로 내용 가져오기를 시도하지 않습니다.'
+            );
           }
 
           // Gmail에서 내용을 가져왔거나 텍스트 영역에 내용이 있는 경우
@@ -191,6 +266,43 @@ function MailForm() {
             );
 
             dispatch(mailFormActions.setDraftSummary(summary));
+
+            // 생성된 요약을 Gmail 에디터에 자동으로 삽입
+            if (isGmailTab) {
+              try {
+                // 현재 활성화된 탭 가져오기
+                const tabs = await chrome.tabs.query({
+                  active: true,
+                  currentWindow: true,
+                });
+                if (tabs && tabs.length > 0) {
+                  // Gmail에 요약 삽입 시도
+                  const insertPromise = chrome.tabs.sendMessage(tabs[0].id!, {
+                    action: 'insertEmailSummary',
+                    summary: summary,
+                  });
+
+                  // 2초 후에 타임아웃
+                  const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(
+                      () => reject(new Error('요약 삽입 시간 초과')),
+                      2000
+                    );
+                  });
+
+                  // Promise.race로 먼저 완료되는 것을 선택
+                  await Promise.race([insertPromise, timeoutPromise]);
+                  console.log('요약 Gmail 에디터에 삽입 시도 완료');
+                }
+              } catch (insertError) {
+                console.error('요약 삽입 오류:', insertError);
+                // 요약 삽입 실패해도 계속 진행
+              }
+            } else {
+              console.log(
+                '현재 탭이 Gmail이 아니므로 요약 삽입을 시도하지 않습니다.'
+              );
+            }
           }
           // 내용이 없는 경우
           else {
