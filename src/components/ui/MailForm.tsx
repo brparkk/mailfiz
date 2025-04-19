@@ -549,7 +549,11 @@ function MailForm() {
         className="w-full h-12 rounded-[8px] mt-8 font-medium"
         disabled={state.ui.isLoading}
       >
-        {state.ui.isLoading ? 'Generating...' : 'Generate'}
+        {state.ui.isLoading
+          ? 'Generating...'
+          : state.content.generatedEmail
+            ? 'Regenerate'
+            : 'Generate'}
       </Button>
     </form>
   );
