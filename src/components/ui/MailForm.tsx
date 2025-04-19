@@ -668,7 +668,7 @@ function MailForm() {
         <legend className="block text-sm font-medium text-text-primary">
           Generated Email Preview
         </legend>
-        <div className="w-full h-40 p-4 mt-2 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
+        <div className="w-full h-40 p-4 mt-2 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary whitespace-pre-wrap">
           {state.content.generatedEmail
             ? extractEmailBody(state.content.generatedEmail)
             : '이메일이 생성되면 여기에 표시됩니다.'}
