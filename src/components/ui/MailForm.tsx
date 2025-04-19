@@ -82,6 +82,109 @@ function MailForm() {
         const result = await chrome.storage.sync.get('apiKey');
         if (result.apiKey && apiKeyInputRef.current) {
           apiKeyInputRef.current.value = result.apiKey;
+
+          // 저장된 API 키가 있으면 자동으로 Gmail 내용 가져오기와 요약 생성 트리거
+          setTimeout(async () => {
+            console.log('저장된 API 키로 자동 요약 시작');
+
+            // 현재 탭이 Gmail인지 확인
+            let isGmailTab = false;
+            try {
+              const tabs = await chrome.tabs.query({
+                active: true,
+                currentWindow: true,
+              });
+              if (tabs && tabs.length > 0 && tabs[0].url) {
+                isGmailTab = tabs[0].url.includes('mail.google.com');
+                console.log('현재 탭이 Gmail인지 확인:', isGmailTab);
+              }
+            } catch (tabError) {
+              console.error('탭 정보 가져오기 오류:', tabError);
+            }
+
+            if (isGmailTab) {
+              try {
+                dispatch(mailFormActions.setSummarizing(true));
+                dispatch(mailFormActions.setSummaryError(null));
+
+                console.log('Gmail 내용 자동 가져오기 시도...');
+                // 내용 가져오기 시도
+                try {
+                  const gmailResponsePromise = getEmailContentFromGmail();
+                  const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(
+                      () => reject(new Error('Gmail 내용 가져오기 시간 초과')),
+                      2000
+                    );
+                  });
+
+                  const gmailResponse = (await Promise.race([
+                    gmailResponsePromise,
+                    timeoutPromise,
+                  ])) as { success: boolean; content?: string; error?: string };
+
+                  if (
+                    gmailResponse &&
+                    gmailResponse.success &&
+                    gmailResponse.content
+                  ) {
+                    console.log('Gmail 내용 자동 가져오기 성공');
+                    const gmailContent = gmailResponse.content.replace(
+                      /<[^>]*>/g,
+                      ''
+                    );
+
+                    if (textareaRef.current) {
+                      textareaRef.current.value = gmailContent;
+                    }
+
+                    // 요약 생성
+                    const summary = await generateEmailSummary(
+                      gmailContent,
+                      state.form.browserLanguage,
+                      result.apiKey
+                    );
+
+                    dispatch(mailFormActions.setDraftSummary(summary));
+
+                    // 생성된 요약을 Gmail 에디터에 자동으로 삽입
+                    try {
+                      const tabs = await chrome.tabs.query({
+                        active: true,
+                        currentWindow: true,
+                      });
+                      if (tabs && tabs.length > 0) {
+                        await chrome.tabs.sendMessage(tabs[0].id!, {
+                          action: 'insertEmailSummary',
+                          summary: summary,
+                        });
+                        console.log('요약 Gmail 에디터에 자동 삽입 완료');
+                      }
+                    } catch (insertError) {
+                      console.error('요약 자동 삽입 오류:', insertError);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Gmail 내용 자동 가져오기 오류:', error);
+                }
+              } catch (error) {
+                console.error('자동 요약 생성 오류:', error);
+                dispatch(
+                  mailFormActions.setSummaryError(
+                    error instanceof Error
+                      ? error.message
+                      : '자동 요약 생성 중 오류가 발생했습니다.'
+                  )
+                );
+              } finally {
+                dispatch(mailFormActions.setSummarizing(false));
+              }
+            } else {
+              console.log(
+                '현재 탭이 Gmail이 아니므로 자동 요약을 생성하지 않습니다.'
+              );
+            }
+          }, 500); // 페이지 로드 후 0.5초 후에 실행
         }
       } catch (e) {
         console.error('API 키 로드 중 오류 발생:', e);
