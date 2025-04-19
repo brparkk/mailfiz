@@ -48,10 +48,6 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Copy manifest.json
-        run: |
-          cp manifest.json src/dist/manifest.json
-
       - name: Package Extension
         run: |
           cd dist
