@@ -35,17 +35,17 @@ Instructions:
 Format your output like this:
 ---
 [Email Body Starts]
-{greeting}\n
+[Greeting]: {greeting}
 
-{introduction}\n
+[Introduction]: {introduction}
 
-{main_content}\n
+[Main Content]: {main_content}
 
-{concluding_remarks}\n
+[Concluding Remarks]: {concluding_remarks}
 
-{closing}\n
+[Closing]: {closing}
 
-{signature}\n
+[Signature]: {signature}
 [Email Body Ends]
 ---
 
