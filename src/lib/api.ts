@@ -34,19 +34,29 @@ Instructions:
 Format your output like this:
 ---
 [Email Body Starts]
-{{Appropriate greeting based on tone and context}}
+{greeting}
 
-{{Brief introduction paragraph related to the purpose of the email}}
+{introduction}
 
-{{Main message content with appropriate explanations or details}}
+{main_content}
 
-{{Concluding remarks summarizing main points or next steps}}
+{concluding_remarks}
 
-{{Appropriate closing phrase based on tone}}
+{closing}
 
-{{Signature}}
+{signature}
 [Email Body Ends]
 ---
+
+Where:
+- {greeting}: Appropriate greeting based on tone and context
+- {introduction}: Brief introduction paragraph related to the purpose of the email
+- {main_content}: Main message content with appropriate explanations or details
+- {concluding_remarks}: Concluding remarks summarizing main points or next steps
+- {closing}: Appropriate closing phrase based on tone
+- {signature}: Signature (only if requested)
+
+Remember to include proper spacing between paragraphs.
 `;
 
 const summaryPrompt = (message: string, language: string) => `
@@ -60,19 +70,26 @@ Instructions:
 - The summary should be in the specified language.
 - Format your response exactly according to the template below.
 - Keep each section to a maximum of 1-2 lines.
+- Ensure proper spacing between sections.
 
 Format your response like this:
 ---
 [Summary Starts]
-[Subject]: {{Suggest a concise, appropriate subject line for this email}}
+[Subject]: {subject}
 
-[Purpose]: {{One line describing why this email is being written}}
+[Purpose]: {purpose}
 
-[Content Summary]: {{One to two lines summarizing the main content}}
+[Content Summary]: {content_summary}
 
-[Action Items]: {{Any requests, deadlines, or actions mentioned in the email, if applicable. If none, write "None".}}
+[Action Items]: {action_items}
 [Summary Ends]
 ---
+
+Where:
+- {subject}: A concise, appropriate subject line for this email
+- {purpose}: One line describing why this email is being written
+- {content_summary}: One to two lines summarizing the main content
+- {action_items}: Any requests, deadlines, or actions mentioned in the email, if applicable. If none, write "None".
 `;
 
 export const generateText = async (
