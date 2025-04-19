@@ -30,21 +30,22 @@ Instructions:
 - In the body, provide an appropriate response, explanation, or message based on the context.  
 - End with a polite closing that fits the tone and situation.  
 - Do not include a signature unless specifically requested.
+- Ensure proper spacing between sections.
 
 Format your output like this:
 ---
 [Email Body Starts]
-{greeting}
+{greeting}\n
 
-{introduction}
+{introduction}\n
 
-{main_content}
+{main_content}\n
 
-{concluding_remarks}
+{concluding_remarks}\n
 
-{closing}
+{closing}\n
 
-{signature}
+{signature}\n
 [Email Body Ends]
 ---
 
