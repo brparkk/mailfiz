@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
+import { configDefaults } from 'vitest/config';
 
 import { crx } from '@crxjs/vite-plugin';
 import manifest from './manifest.json';
@@ -36,6 +37,15 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: ['react', 'react-dom'],
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts'],
+      exclude: [...configDefaults.exclude, 'e2e/*'],
+      coverage: {
+        reporter: ['text', 'json', 'html'],
+      },
     },
   };
 });
