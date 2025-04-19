@@ -164,15 +164,15 @@ describe('API Tests', () => {
 
   describe('Email Summary Generation', () => {
     test('should throw error when draft is empty', async () => {
-      await expect(apiModule.generateEmailSummary('', 'en')).rejects.toThrow(
-        'Draft is too short. Please provide more details.'
-      );
+      await expect(
+        apiModule.generateEmailSummary('', 'en', mockApiKey)
+      ).rejects.toThrow('Draft is too short. Please provide more details.');
     });
 
     test('should throw error when draft is too long (over 5000 characters)', async () => {
       const longDraft = 'a'.repeat(5001);
       await expect(
-        apiModule.generateEmailSummary(longDraft, 'en')
+        apiModule.generateEmailSummary(longDraft, 'en', mockApiKey)
       ).rejects.toThrow(
         'Draft is too long. Please keep it under 5000 characters.'
       );
@@ -181,7 +181,7 @@ describe('API Tests', () => {
     test('should throw error when draft is too short (under 2 characters)', async () => {
       const shortDraft = 'a';
       await expect(
-        apiModule.generateEmailSummary(shortDraft, 'en')
+        apiModule.generateEmailSummary(shortDraft, 'en', mockApiKey)
       ).rejects.toThrow('Draft is too short. Please provide more details.');
     });
 
@@ -216,7 +216,11 @@ describe('API Tests', () => {
         });
       });
 
-      const result = await apiModule.generateEmailSummary(draft, language);
+      const result = await apiModule.generateEmailSummary(
+        draft,
+        language,
+        mockApiKey
+      );
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
     });
@@ -248,7 +252,11 @@ describe('API Tests', () => {
       });
 
       const draft = 'This is a test draft';
-      const result = await apiModule.generateEmailSummary(draft, 'en');
+      const result = await apiModule.generateEmailSummary(
+        draft,
+        'en',
+        mockApiKey
+      );
 
       expect(result).toBeDefined();
       expect(result).toContain('[Subject]: Test Subject');
@@ -274,7 +282,11 @@ describe('API Tests', () => {
       });
 
       const draft = 'This is a test draft';
-      const result = await apiModule.generateEmailSummary(draft, 'en');
+      const result = await apiModule.generateEmailSummary(
+        draft,
+        'en',
+        mockApiKey
+      );
 
       expect(result).toBe(unusualResponse);
     });

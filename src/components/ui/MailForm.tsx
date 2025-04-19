@@ -15,6 +15,7 @@ import {
 function MailForm() {
   const [state, dispatch] = useReducer(mailFormReducer, initialMailFormState);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const apiKeyInputRef = useRef<HTMLInputElement>(null);
 
   // 브라우저 언어 감지
   useEffect(() => {
@@ -36,6 +37,20 @@ function MailForm() {
     };
 
     detectBrowserLanguage();
+
+    // 저장된 API 키 가져오기
+    const loadStoredApiKey = async () => {
+      try {
+        const result = await chrome.storage.sync.get('apiKey');
+        if (result.apiKey && apiKeyInputRef.current) {
+          apiKeyInputRef.current.value = result.apiKey;
+        }
+      } catch (e) {
+        console.error('API 키 로드 중 오류 발생:', e);
+      }
+    };
+
+    loadStoredApiKey();
   }, []);
 
   // 사용자가 입력한 텍스트 감지하여 자동으로 요약 생성
@@ -48,7 +63,8 @@ function MailForm() {
     if (
       draftText.length >= 50 &&
       !state.content.draftSummary &&
-      !state.ui.isSummarizing
+      !state.ui.isSummarizing &&
+      apiKeyInputRef.current?.value
     ) {
       try {
         dispatch(mailFormActions.setSummarizing(true));
@@ -57,7 +73,8 @@ function MailForm() {
         // 요약 생성
         const summary = await generateEmailSummary(
           draftText,
-          state.form.browserLanguage
+          state.form.browserLanguage,
+          apiKeyInputRef.current.value
         );
         dispatch(mailFormActions.setDraftSummary(summary));
       } catch (error) {
@@ -82,6 +99,11 @@ function MailForm() {
       return;
     }
 
+    if (!apiKeyInputRef.current?.value) {
+      dispatch(mailFormActions.setSummaryError('API 키가 필요합니다.'));
+      return;
+    }
+
     try {
       dispatch(mailFormActions.setSummarizing(true));
       dispatch(mailFormActions.setSummaryError(null));
@@ -89,7 +111,8 @@ function MailForm() {
       // 요약 생성
       const summary = await generateEmailSummary(
         textareaRef.current.value,
-        state.form.browserLanguage
+        state.form.browserLanguage,
+        apiKeyInputRef.current.value
       );
       dispatch(mailFormActions.setDraftSummary(summary));
     } catch (error) {
@@ -185,6 +208,20 @@ function MailForm() {
         </span>
       </fieldset>
 
+      {/* API Key 섹션 */}
+      <fieldset>
+        <legend className="block text-sm font-medium text-text-primary">
+          API Key
+        </legend>
+        <input
+          ref={apiKeyInputRef}
+          type="text"
+          name="mailfiz-api-key"
+          placeholder="Enter your API key"
+          className="w-full h-9.5 mt-2 rounded-[8px] px-4 py-2 font-light text-xs border border-border placeholder:text-input-placeholder placeholder:text-xs"
+        />
+      </fieldset>
+
       {/* 이메일 요약 섹션 */}
       <fieldset>
         <div className="flex justify-between items-center">
@@ -202,7 +239,7 @@ function MailForm() {
             </button>
           )}
         </div>
-        <div className="w-full h-auto min-h-[120px] p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
+        <div className="w-full h-auto min-h-[120px] mt-2 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
           {state.ui.isSummarizing ? (
             <div className="text-gray-500">생성 중...</div>
           ) : state.content.draftSummary ? (
@@ -210,9 +247,12 @@ function MailForm() {
               {state.content.draftSummary}
             </div>
           ) : (
-            <div className="text-gray-500">
-              이메일 내용을 입력하면 자동으로 요약이 생성됩니다.
-            </div>
+            <textarea
+              ref={textareaRef}
+              name="mailfiz-summary-email"
+              placeholder="Email Summary"
+              onChange={handleDraftChange}
+            />
           )}
         </div>
         {state.messages.summaryError && (
@@ -222,24 +262,21 @@ function MailForm() {
         )}
       </fieldset>
 
+      {/* 이메일 생성 섹션 */}
       <fieldset>
         <legend className="block text-sm font-medium text-text-primary">
-          API Key
+          Create Email Draft
         </legend>
-        <input
-          type="text"
-          name="mailfiz-api-key"
-          placeholder="Enter your API key"
-          className="w-full h-9.5 mt-2 rounded-[8px] px-4 py-2 font-light text-xs border border-border placeholder:text-input-placeholder placeholder:text-xs"
+        <textarea
+          ref={textareaRef}
+          name="mailfiz-textarea"
+          placeholder="Enter your rough draft here..."
+          className="w-full h-40 p-4 mt-2 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary"
+          onChange={handleDraftChange}
         />
       </fieldset>
-      <textarea
-        ref={textareaRef}
-        name="mailfiz-textarea"
-        placeholder="Enter your rough draft here..."
-        className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary"
-        onChange={handleDraftChange}
-      />
+
+      {/* 톤 선택 섹션 */}
       <fieldset>
         <legend className="block text-sm font-medium text-text-primary">
           Select tone
@@ -291,7 +328,7 @@ function MailForm() {
         <legend className="block text-sm font-medium text-text-primary">
           Generated Email Preview
         </legend>
-        <div className="w-full h-40 p-4 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
+        <div className="w-full h-40 p-4 mt-2 rounded-[8px] bg-background overflow-y-auto text-text-primary font-light text-xs placeholder:text-input-placeholder active:outline-primary">
           {state.content.generatedEmail
             ? extractEmailBody(state.content.generatedEmail)
             : '이메일이 생성되면 여기에 표시됩니다.'}

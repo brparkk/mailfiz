@@ -126,7 +126,11 @@ export const generateText = async (
   }
 };
 
-export const generateEmailSummary = async (draft: string, language: string) => {
+export const generateEmailSummary = async (
+  draft: string,
+  language: string,
+  apiKey: string
+) => {
   try {
     if (draft.length < 2) {
       throw new Error('Draft is too short. Please provide more details.');
@@ -138,11 +142,8 @@ export const generateEmailSummary = async (draft: string, language: string) => {
       );
     }
 
-    // 환경 변수에서 API 키 가져오기
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
     if (!apiKey) {
-      throw new Error('API key not found in environment variables.');
+      throw new Error('API key is required for generating email summary.');
     }
 
     const openai = new OpenAI({
