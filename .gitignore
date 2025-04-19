@@ -29,6 +29,7 @@ dist-ssr
 
 # coverage
 src/coverage/*
+coverage/*
 
 # src/dist
 src/dist/*
